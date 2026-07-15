@@ -1,4 +1,4 @@
-import { derivePassword, hashToken, normalizeUsername, randomToken } from "./security";
+import { hashToken, normalizeUsername, randomToken } from "./security";
 
 export interface StoredUser {
   id: string;
@@ -45,8 +45,7 @@ const MAX_ATTEMPTS = 5;
 
 export function createAuthService(
   store: AuthStore,
-  now: () => number = Date.now,
-  passwordIterations = 310_000
+  now: () => number = Date.now
 ) {
   async function createSession(userId: string) {
     const sessionToken = randomToken();
@@ -60,24 +59,23 @@ export function createAuthService(
     return sessionToken;
   }
 
-  async function createPassword(password: string) {
-    if (password.length < 12 || password.length > 200) {
-      throw new AuthError("INVALID_PASSWORD", "密码长度需为 12–200 个字符");
+  async function createPassword(passwordProof: string) {
+    if (!/^[A-Za-z0-9_-]{43}$/.test(passwordProof)) {
+      throw new AuthError("INVALID_PASSWORD", "密码凭证无效，请刷新页面后重试");
     }
-    const passwordSalt = randomToken(16);
     return {
-      passwordSalt,
-      passwordHash: await derivePassword(password, passwordSalt, passwordIterations)
+      passwordSalt: "client-pbkdf2-v1",
+      passwordHash: await hashToken(passwordProof)
     };
   }
 
   return {
-    async register(usernameInput: string, password: string) {
+    async register(usernameInput: string, passwordProof: string) {
       const username = normalizeUsername(usernameInput);
       if (await store.getUserByUsername(username)) {
         throw new AuthError("USERNAME_TAKEN", "该用户名已被使用", 409);
       }
-      const passwordRecord = await createPassword(password);
+      const passwordRecord = await createPassword(passwordProof);
       const recoveryCode = randomToken(24);
       const timestamp = now();
       const user: StoredUser = {
@@ -92,7 +90,7 @@ export function createAuthService(
       return { user: { id: user.id, username }, recoveryCode, sessionToken: await createSession(user.id) };
     },
 
-    async login(usernameInput: string, password: string, ipAddress: string) {
+    async login(usernameInput: string, passwordProof: string, ipAddress: string) {
       const username = normalizeUsername(usernameInput);
       const attemptKey = `${ipAddress}:${username}`;
       const timestamp = now();
@@ -106,9 +104,7 @@ export function createAuthService(
       }
 
       const user = await store.getUserByUsername(username);
-      const valid = user
-        ? (await derivePassword(password, user.passwordSalt, passwordIterations)) === user.passwordHash
-        : false;
+      const valid = user ? (await hashToken(passwordProof)) === user.passwordHash : false;
       if (!valid || !user) {
         const count = attempts && timestamp - attempts.windowStartedAt < ATTEMPT_WINDOW_MS
           ? attempts.count + 1
@@ -121,13 +117,13 @@ export function createAuthService(
       return { user: { id: user.id, username }, sessionToken: await createSession(user.id) };
     },
 
-    async recover(usernameInput: string, recoveryCode: string, newPassword: string) {
+    async recover(usernameInput: string, recoveryCode: string, newPasswordProof: string) {
       const username = normalizeUsername(usernameInput);
       const user = await store.getUserByUsername(username);
       if (!user || (await hashToken(recoveryCode)) !== user.recoveryHash) {
         throw new AuthError("INVALID_RECOVERY", "用户名或恢复码不正确", 401);
       }
-      const passwordRecord = await createPassword(newPassword);
+      const passwordRecord = await createPassword(newPasswordProof);
       const nextRecoveryCode = randomToken(24);
       const updatedUser: StoredUser = {
         ...user,

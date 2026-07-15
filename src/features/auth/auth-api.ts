@@ -1,3 +1,5 @@
+import { derivePasswordProof } from "./password-proof";
+
 export interface AuthUser { id: string; username: string }
 export interface AuthResult { user: AuthUser; recoveryCode?: string }
 
@@ -18,14 +20,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const authApi = {
-  login(username: string, password: string) {
-    return request<AuthResult>("/v1/auth/login", { method: "POST", body: JSON.stringify({ username, password }) });
+  async login(username: string, password: string) {
+    const passwordProof = await derivePasswordProof(username, password);
+    return request<AuthResult>("/v1/auth/login", { method: "POST", body: JSON.stringify({ username, password: passwordProof }) });
   },
-  register(username: string, password: string) {
-    return request<AuthResult>("/v1/auth/register", { method: "POST", body: JSON.stringify({ username, password }) });
+  async register(username: string, password: string) {
+    const passwordProof = await derivePasswordProof(username, password);
+    return request<AuthResult>("/v1/auth/register", { method: "POST", body: JSON.stringify({ username, password: passwordProof }) });
   },
-  recover(username: string, recoveryCode: string, newPassword: string) {
-    return request<AuthResult>("/v1/auth/recover", { method: "POST", body: JSON.stringify({ username, recoveryCode, newPassword }) });
+  async recover(username: string, recoveryCode: string, newPassword: string) {
+    const passwordProof = await derivePasswordProof(username, newPassword);
+    return request<AuthResult>("/v1/auth/recover", { method: "POST", body: JSON.stringify({ username, recoveryCode, newPassword: passwordProof }) });
   },
   logout() { return request<void>("/v1/auth/logout", { method: "POST" }); },
   session() { return request<{ user: AuthUser | null }>("/v1/auth/session"); }
