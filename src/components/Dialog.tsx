@@ -12,7 +12,10 @@ export function Dialog({ open, title, children, onClose }: DialogProps) {
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else dialog.setAttribute("open", "");
+    }
     if (!open && dialog.open) dialog.close();
   }, [open]);
 

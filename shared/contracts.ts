@@ -30,24 +30,44 @@ export const syncEntitySchema = z.discriminatedUnion("type", [
   }),
   baseEntitySchema.extend({
     type: z.literal("task"),
-    data: z.object({
-      text: z.string().trim().min(1).max(300),
-      completed: z.boolean(),
-      order: z.number().finite(),
-      day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
-    })
+    data: z.union([
+      z.object({
+        title: z.string().trim().min(1).max(300),
+        completed: z.boolean(),
+        order: z.number().finite()
+      }),
+      z.object({
+        text: z.string().trim().min(1).max(300),
+        completed: z.boolean(),
+        order: z.number().finite(),
+        day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+      })
+    ])
   }),
   baseEntitySchema.extend({
     type: z.literal("note"),
-    data: z.object({ text: z.string().max(20_000) })
+    data: z.union([
+      z.object({ content: z.string().max(20_000) }),
+      z.object({ text: z.string().max(20_000) })
+    ])
   }),
   baseEntitySchema.extend({
     type: z.literal("timer"),
-    data: z.object({
-      durationMs: z.number().int().positive().max(24 * 60 * 60 * 1000),
-      remainingMs: z.number().int().nonnegative(),
-      runningSince: timestampSchema.nullable()
-    })
+    data: z.union([
+      z.object({
+        durationMs: z.number().int().positive().max(24 * 60 * 60 * 1000),
+        remainingMs: z.number().int().nonnegative(),
+        running: z.boolean(),
+        startedAt: timestampSchema.optional(),
+        completedAt: timestampSchema.optional(),
+        updatedAt: timestampSchema.optional()
+      }),
+      z.object({
+        durationMs: z.number().int().positive().max(24 * 60 * 60 * 1000),
+        remainingMs: z.number().int().nonnegative(),
+        runningSince: timestampSchema.nullable()
+      })
+    ])
   }),
   baseEntitySchema.extend({
     type: z.literal("preference"),

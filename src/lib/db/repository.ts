@@ -10,6 +10,7 @@ export interface WorkspaceRepository {
   getPendingChanges(): Promise<SyncEntity[]>;
   removePendingChanges(ids: string[]): Promise<void>;
   setTheme(theme: ThemeId): Promise<void>;
+  replaceSnapshot(snapshot: WorkspaceSnapshot): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -56,6 +57,15 @@ export function createWorkspaceRepository(databaseName?: string): WorkspaceRepos
     },
     async setTheme(theme) {
       await database.meta.put({ key: "theme", value: theme });
+    },
+    async replaceSnapshot(snapshot) {
+      await database.transaction("rw", database.entities, database.syncQueue, database.meta, async () => {
+        await database.entities.clear();
+        await database.syncQueue.clear();
+        await database.entities.bulkPut(snapshot.entities);
+        await database.syncQueue.bulkPut(snapshot.entities);
+        await database.meta.put({ key: "theme", value: snapshot.theme });
+      });
     },
     async close() {
       database.close();

@@ -21,6 +21,7 @@ function createRepository() {
     getPendingChanges: vi.fn(async () => [change]),
     removePendingChanges: vi.fn(),
     setTheme: vi.fn(),
+    replaceSnapshot: vi.fn(),
     close: vi.fn()
   };
 }
