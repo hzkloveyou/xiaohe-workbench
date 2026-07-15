@@ -1,0 +1,15 @@
+{
+  "name": "小贺的工作台",
+  "short_name": "小贺工作台",
+  "description": "搜索、书签与今日专注，一个清新好用的个人启动台。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#edf9fb",
+  "theme_color": "#2e9c83",
+  "icons": [
+    { "src": "/icons/workbench.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/workbench-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

@@ -48,7 +48,7 @@ export function App() {
   useEffect(() => {
     let active = true;
     void repository.initializeDefaults().then(() => repository.getSnapshot()).then((value) => { if (active) setSnapshot(value); }).catch(() => { if (active) setToast("本地数据暂时无法读取，请刷新重试"); });
-    return () => { active = false; void repository.close(); };
+    return () => { active = false; };
   }, [repository]);
   useEffect(() => {
     void authApi.session().then(({ user: sessionUser }) => setUser(sessionUser)).catch(() => undefined);
@@ -71,7 +71,11 @@ export function App() {
     await Promise.all(changes.map((change) => repository.applyChange(change)));
     await refresh();
   };
-  const setTheme = async (theme: ThemeId) => { await repository.setTheme(theme); await refresh(); };
+  const setTheme = async (theme: ThemeId) => {
+    setSnapshot((current) => current ? { ...current, theme } : current);
+    try { await repository.setTheme(theme); }
+    catch { await refresh(); setToast("主题保存失败，请重试"); }
+  };
   const setPanels = (value: PanelVisibility) => { setVisibility(value); localStorage.setItem("xiaohe-panels", JSON.stringify(value)); };
   const groups = snapshot?.entities.filter((entity) => entity.type === "bookmarkGroup" && !entity.deletedAt) ?? [];
   const bookmarks = snapshot?.entities.filter(isBookmarkEntity) ?? [];
