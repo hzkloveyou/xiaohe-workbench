@@ -18,11 +18,13 @@
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
     "dexie": "^4.4.4",
+    "hono": "^4.12.30",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260714.1",
     "@eslint/js": "^10.0.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
