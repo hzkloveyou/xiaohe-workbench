@@ -10,7 +10,7 @@ const baseEntitySchema = z.object({
   deletedAt: timestampSchema.optional()
 });
 
-const entitySchema = z.discriminatedUnion("type", [
+export const syncEntitySchema = z.discriminatedUnion("type", [
   baseEntitySchema.extend({
     type: z.literal("bookmark"),
     data: z.object({
@@ -58,7 +58,7 @@ const entitySchema = z.discriminatedUnion("type", [
 export const workspaceSnapshotSchema = z.object({
   version: z.literal(1),
   theme: z.enum(THEME_IDS),
-  entities: z.array(entitySchema).max(10_000)
+  entities: z.array(syncEntitySchema).max(10_000)
 });
 
 export function parseWorkspaceSnapshot(value: unknown): WorkspaceSnapshot {

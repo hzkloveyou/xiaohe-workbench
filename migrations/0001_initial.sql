@@ -24,3 +24,15 @@ CREATE TABLE auth_attempts (
   count INTEGER NOT NULL,
   window_started_at INTEGER NOT NULL
 );
+
+CREATE TABLE workspace_entities (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  data_json TEXT NOT NULL,
+  updated_at INTEGER NOT NULL,
+  deleted_at INTEGER,
+  PRIMARY KEY (user_id, id)
+);
+CREATE INDEX workspace_entities_user_clock
+  ON workspace_entities(user_id, updated_at, deleted_at);
