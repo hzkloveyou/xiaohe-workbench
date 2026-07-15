@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "xiaohe-workbench-site",
+  "main": "worker/site-proxy.ts",
+  "compatibility_date": "2026-07-15",
+  "account_id": "f69cbb2e3af37977863db6695f801734",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "080492.xyz/*", "zone_name": "080492.xyz" },
+    { "pattern": "www.080492.xyz/*", "zone_name": "080492.xyz" }
+  ]
+}

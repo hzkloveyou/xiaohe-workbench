@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "xiaohe-workbench-api",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-07-15",
+  "account_id": "f69cbb2e3af37977863db6695f801734",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "api.080492.xyz", "custom_domain": true }
+  ],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://080492.xyz,https://www.080492.xyz,http://localhost:5173,http://127.0.0.1:4173"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "xiaohe-workbench",
+      "database_id": "2d9b0f41-42ab-42c0-b9ce-13113c66787c",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
