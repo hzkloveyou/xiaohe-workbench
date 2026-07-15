@@ -1,0 +1,107 @@
+import type { SyncEntity } from "../../../shared/entities";
+
+export interface BookmarkData {
+  title: string;
+  url: string;
+  groupId: string;
+  order: number;
+  icon?: string;
+}
+
+export type BookmarkEntity = SyncEntity<BookmarkData> & { type: "bookmark" };
+
+export interface BookmarkInput {
+  title: string;
+  url: string;
+  groupId: string;
+  order?: number;
+  icon?: string;
+}
+
+export function normalizeBookmarkUrl(value: string): string {
+  const candidate = value.trim();
+  if (!candidate) throw new Error("请输入网址");
+  const withProtocol = /^[a-z][a-z\d+.-]*:/i.test(candidate) ? candidate : `https://${candidate}`;
+  const url = new URL(withProtocol);
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("仅支持 HTTP 或 HTTPS 网址");
+  }
+  url.hostname = url.hostname.toLowerCase();
+  return url.toString();
+}
+
+export function isBookmarkEntity(entity: SyncEntity): entity is BookmarkEntity {
+  return entity.type === "bookmark" && !entity.deletedAt;
+}
+
+export function createBookmark(
+  input: BookmarkInput,
+  options: { id?: string; now?: number } = {}
+): BookmarkEntity {
+  const title = input.title.trim();
+  if (!title) throw new Error("请输入书签名称");
+  const url = normalizeBookmarkUrl(input.url);
+  const icon = input.icon?.trim() || Array.from(title)[0]?.toUpperCase() || "↗";
+  return {
+    id: options.id ?? crypto.randomUUID(),
+    type: "bookmark",
+    updatedAt: options.now ?? Date.now(),
+    data: {
+      title,
+      url,
+      groupId: input.groupId,
+      order: input.order ?? 0,
+      icon
+    }
+  };
+}
+
+export function findDuplicateBookmark(
+  entities: SyncEntity[],
+  value: string,
+  excludeId?: string
+): string | undefined {
+  const target = normalizeBookmarkUrl(value);
+  return entities.find(
+    (entity) =>
+      isBookmarkEntity(entity) &&
+      entity.id !== excludeId &&
+      normalizeBookmarkUrl(entity.data.url) === target
+  )?.id;
+}
+
+export function updateBookmark(
+  entities: SyncEntity[],
+  id: string,
+  patch: Partial<BookmarkInput>,
+  now = Date.now()
+): SyncEntity[] {
+  return entities.map((entity) => {
+    if (!isBookmarkEntity(entity) || entity.id !== id) return entity;
+    const data: BookmarkData = {
+      ...entity.data,
+      ...patch,
+      title: patch.title === undefined ? entity.data.title : patch.title.trim(),
+      url: patch.url === undefined ? entity.data.url : normalizeBookmarkUrl(patch.url)
+    };
+    return { ...entity, updatedAt: now, data };
+  });
+}
+
+export function reorderBookmarks(
+  entities: SyncEntity[],
+  activeId: string,
+  overId: string,
+  now = Date.now()
+): SyncEntity[] {
+  const activeIndex = entities.findIndex((entity) => entity.id === activeId);
+  const overIndex = entities.findIndex((entity) => entity.id === overId);
+  if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) return [...entities];
+  const next = [...entities];
+  const [active] = next.splice(activeIndex, 1);
+  if (!active) return next;
+  next.splice(overIndex, 0, active);
+  return next.map((entity, order) =>
+    isBookmarkEntity(entity) ? { ...entity, updatedAt: now, data: { ...entity.data, order } } : entity
+  );
+}
