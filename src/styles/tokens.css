@@ -1,0 +1,13 @@
+:root {
+  color-scheme: light;
+  --font-sans: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --ink: #17333c;
+  --ink-soft: #58717a;
+  --surface: rgba(255, 255, 255, 0.68);
+  --line: rgba(44, 83, 93, 0.12);
+  --mint: #4dbb9d;
+  --sky: #7eb8ed;
+  --cream: #fff7e7;
+  --radius-lg: 28px;
+  --shadow-soft: 0 20px 60px rgba(40, 86, 98, 0.11);
+}
