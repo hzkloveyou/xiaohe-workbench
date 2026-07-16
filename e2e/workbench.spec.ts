@@ -4,7 +4,7 @@ test("opens the Chinese workbench and adds a bookmark", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "小贺的工作台" })).toBeVisible();
   await page.getByRole("button", { name: "添加书签" }).click();
-  await page.getByLabel("名称").fill("OpenAI 文档");
+  await page.getByLabel("名称", { exact: true }).fill("OpenAI 文档");
   await page.getByRole("textbox", { name: "网址", exact: true }).fill("platform.openai.com/docs");
   await page.getByRole("button", { name: "保存" }).click();
   await expect(page.getByRole("link", { name: /OpenAI 文档/ })).toBeVisible();
