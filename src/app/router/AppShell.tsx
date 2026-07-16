@@ -98,10 +98,12 @@ export function AppShell() {
           open={customizeOpen}
           theme={workspace.snapshot.theme}
           visibility={workspace.visibility}
+          preferences={workspace.preferences}
           snapshot={workspace.snapshot}
           onClose={() => setCustomizeOpen(false)}
           onThemeChange={(theme) => void workspace.setTheme(theme)}
           onVisibilityChange={workspace.setVisibility}
+          onPreferencesChange={workspace.setPreferences}
           onImport={(snapshot) => {
             void workspace.importSnapshot(snapshot).then(() => setCustomizeOpen(false));
           }}

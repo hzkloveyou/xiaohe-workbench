@@ -34,6 +34,12 @@ describe("workspace backup", () => {
           type: "focusSession",
           updatedAt: 2,
           data: { plannedMs: 1_500_000, actualMs: 1_500_000, startedAt: 1, endedAt: 1_500_001, completed: true }
+        },
+        {
+          id: "workspace-preferences",
+          type: "preference",
+          updatedAt: 3,
+          data: { searchEngine: "google", githubUsername: "hzkloveyou", panels: { search: true, bookmarks: true, focus: false } }
         }
       ]
     } as unknown as WorkspaceSnapshot;

@@ -26,8 +26,8 @@ function greeting() {
 }
 
 export default function OverviewPage() {
-  const { snapshot, entities, loading, visibility, commit, remove, showToast } = useWorkspace();
-  const [engine, setEngine] = useState<SearchEngineId>("bing");
+  const { snapshot, entities, loading, visibility, preferences, setPreferences, commit, remove, showToast } = useWorkspace();
+  const engine = preferences.searchEngine as SearchEngineId;
   const [bookmarkOpen, setBookmarkOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<BookmarkEntity | undefined>();
   const reduceMotion = useReducedMotion();
@@ -120,7 +120,7 @@ export default function OverviewPage() {
       </motion.section>
       {visibility.search ? (
         <motion.div className="search-section" {...reveal} transition={{ duration: 0.45, delay: 0.06 }}>
-          <SearchBar engine={engine} onEngineChange={setEngine} />
+          <SearchBar engine={engine} onEngineChange={(value) => setPreferences({ searchEngine: value })} />
         </motion.div>
       ) : null}
       {loading || !snapshot ? (

@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { SyncEntity, ThemeId, WorkspaceSnapshot } from "../../../shared/entities";
 import type { AuthUser } from "../../features/auth/auth-api";
 import type { PanelVisibility } from "../../features/customize/CustomizeDrawer";
+import type { WorkspacePreferences } from "../../features/customize/preference-model";
 import type { SyncState } from "../../lib/sync/engine";
 
 export interface WorkspaceContextValue {
@@ -12,10 +13,12 @@ export interface WorkspaceContextValue {
   syncState: SyncState;
   toast: string;
   visibility: PanelVisibility;
+  preferences: WorkspacePreferences;
   commit(changes: SyncEntity[]): Promise<void>;
   remove(entity: SyncEntity): Promise<void>;
   setTheme(theme: ThemeId): Promise<void>;
   setVisibility(value: PanelVisibility): void;
+  setPreferences(value: Partial<WorkspacePreferences>): void;
   importSnapshot(snapshot: WorkspaceSnapshot): Promise<void>;
   refresh(): Promise<void>;
   setAuthenticatedUser(user: AuthUser): void;

@@ -17,7 +17,15 @@
   --shadow: 0 24px 70px rgba(40, 93, 103, 0.12), 0 2px 12px rgba(40, 93, 103, 0.06);
   --shadow-hover: 0 22px 46px rgba(39, 93, 102, 0.16);
   --danger: #c95757;
+  --success: #3da77f;
+  --warning: #d99a3f;
   --focus: #1477af;
+  --text: var(--ink);
+  --text-soft: var(--ink-soft);
+  --surface: var(--glass-strong);
+  --surface-soft: color-mix(in srgb, var(--glass-strong) 64%, transparent);
+  --accent-soft: var(--primary-soft);
+  --nav-height: 74px;
   --radius-xl: 30px;
   --radius-lg: 22px;
   --radius-md: 16px;

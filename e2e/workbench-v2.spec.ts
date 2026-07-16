@@ -18,3 +18,11 @@ test("refreshes a deep workbench link", async ({ page }) => {
   await page.reload();
   await expect(page.getByRole("heading", { name: "收集与书签" })).toBeVisible();
 });
+
+test("uses bottom navigation on a phone without horizontal overflow", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/today");
+  await expect(page.getByRole("navigation", { name: "主要页面" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "25 分钟" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

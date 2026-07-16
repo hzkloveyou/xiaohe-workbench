@@ -2,21 +2,12 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import type { SyncEntity, ThemeId, WorkspaceSnapshot } from "../../../shared/entities";
 import { authApi, type AuthUser } from "../../features/auth/auth-api";
 import type { PanelVisibility } from "../../features/customize/CustomizeDrawer";
+import { getWorkspacePreferences, upsertWorkspacePreferences, type WorkspacePreferences } from "../../features/customize/preference-model";
 import { createWorkspaceRepository, type WorkspaceRepository } from "../../lib/db/repository";
 import { createSyncApi } from "../../lib/sync/api";
 import { createSyncEngine, type SyncState } from "../../lib/sync/engine";
 import { tombstoneEntity } from "./workspace-actions";
 import { WorkspaceContext } from "./workspace-context";
-
-const defaultVisibility: PanelVisibility = { search: true, bookmarks: true, focus: true };
-
-function readVisibility(): PanelVisibility {
-  try {
-    return { ...defaultVisibility, ...JSON.parse(localStorage.getItem("xiaohe-panels") ?? "{}") as Partial<PanelVisibility> };
-  } catch {
-    return defaultVisibility;
-  }
-}
 
 interface AuthClient {
   session(): Promise<{ user: AuthUser | null }>;
@@ -38,7 +29,6 @@ export function WorkspaceProvider({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [syncState, setSyncState] = useState<SyncState>(navigator.onLine ? "idle" : "offline");
   const [toast, setToast] = useState("");
-  const [visibility, setVisibilityState] = useState(readVisibility);
 
   const refresh = useCallback(async () => {
     setSnapshot(await repository.getSnapshot());
@@ -84,6 +74,9 @@ export function WorkspaceProvider({
     await refresh();
   }, [refresh, repository]);
 
+  const preferences = useMemo(() => getWorkspacePreferences(snapshot?.entities ?? []), [snapshot?.entities]);
+  const visibility = preferences.panels;
+
   const remove = useCallback(async (entity: SyncEntity) => {
     await commit([tombstoneEntity(entity)]);
   }, [commit]);
@@ -98,10 +91,20 @@ export function WorkspaceProvider({
     }
   }, [refresh, repository]);
 
+  const setPreferences = useCallback((patch: Partial<WorkspacePreferences>) => {
+    if (!snapshot) return;
+    const entities = upsertWorkspacePreferences(snapshot.entities, patch);
+    const preference = entities.find((entity) => entity.id === "workspace-preferences");
+    setSnapshot({ ...snapshot, entities });
+    if (preference) void repository.applyChange(preference).then(refresh).catch(() => {
+      void refresh();
+      setToast("偏好设置保存失败，请重试");
+    });
+  }, [refresh, repository, snapshot]);
+
   const setVisibility = useCallback((value: PanelVisibility) => {
-    setVisibilityState(value);
-    localStorage.setItem("xiaohe-panels", JSON.stringify(value));
-  }, []);
+    setPreferences({ panels: value });
+  }, [setPreferences]);
 
   const importSnapshot = useCallback(async (value: WorkspaceSnapshot) => {
     await repository.replaceSnapshot(value);
@@ -124,17 +127,19 @@ export function WorkspaceProvider({
     syncState,
     toast,
     visibility,
+    preferences,
     commit,
     remove,
     setTheme,
     setVisibility,
+    setPreferences,
     importSnapshot,
     refresh,
     setAuthenticatedUser: setUser,
     logout,
     showToast: setToast,
     clearToast: () => setToast("")
-  }), [commit, importSnapshot, loading, logout, refresh, remove, setTheme, setVisibility, snapshot, syncState, toast, user, visibility]);
+  }), [commit, importSnapshot, loading, logout, preferences, refresh, remove, setPreferences, setTheme, setVisibility, snapshot, syncState, toast, user, visibility]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
