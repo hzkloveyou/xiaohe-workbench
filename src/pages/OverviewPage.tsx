@@ -18,6 +18,7 @@ import { TodayPanel } from "../features/focus/TodayPanel";
 import { createTimerState, type TimerState } from "../features/focus/timer";
 import { SearchBar } from "../features/search/SearchBar";
 import type { SearchEngineId } from "../features/search/search";
+import { completeTask, createTask, isTaskEntity, localDate } from "../features/planner/task-model";
 
 function greeting() {
   const hour = new Date().getHours();
@@ -33,7 +34,7 @@ export default function OverviewPage() {
 
   const groups = entities.filter((entity) => entity.type === "bookmarkGroup" && !entity.deletedAt);
   const bookmarks = entities.filter(isBookmarkEntity);
-  const tasks = entities.filter((entity) => entity.type === "task" && !entity.deletedAt);
+  const tasks = entities.filter(isTaskEntity);
   const noteEntity = entities.find((entity) => entity.type === "note" && !entity.deletedAt);
   const timerEntity = entities.find((entity) => entity.type === "timer" && !entity.deletedAt);
   const note = (noteEntity?.data as { content?: string } | undefined)?.content ?? "";
@@ -81,17 +82,10 @@ export default function OverviewPage() {
     }
   };
 
-  const addTask = async (title: string) => commit([{
-    id: crypto.randomUUID(),
-    type: "task",
-    updatedAt: Date.now(),
-    data: { title, order: tasks.length, completed: false }
-  }]);
-  const toggleTask = async (task: SyncEntity) => commit([{
-    ...task,
-    updatedAt: Date.now(),
-    data: { ...(task.data as object), completed: true, completedAt: Date.now() }
-  }]);
+  const addTask = async (title: string) => commit([createTask({ title, order: tasks.length, scheduledFor: localDate() })]);
+  const toggleTask = async (task: SyncEntity) => {
+    if (isTaskEntity(task)) await commit(completeTask(task));
+  };
   const saveNote = async (content: string) => commit([{
     id: noteEntity?.id ?? "quick-note",
     type: "note",

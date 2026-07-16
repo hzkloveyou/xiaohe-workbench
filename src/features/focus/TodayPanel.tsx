@@ -5,9 +5,7 @@ import { GlassCard } from "../../components/GlassCard";
 import { FocusTimer } from "./FocusTimer";
 import { QuickNote } from "./QuickNote";
 import { createTimerState, type TimerState } from "./timer";
-
-interface TaskData { title: string; order: number; completed: boolean }
-type TaskEntity = SyncEntity<TaskData> & { type: "task" };
+import { isTaskEntity, tasksForView, type TaskEntity } from "../planner/task-model";
 
 interface TodayPanelProps {
   tasks: SyncEntity[];
@@ -19,14 +17,10 @@ interface TodayPanelProps {
   onTimerChange?: (timer: TimerState) => void;
 }
 
-function isActiveTask(entity: SyncEntity): entity is TaskEntity {
-  return entity.type === "task" && !entity.deletedAt && !(entity.data as TaskData).completed;
-}
-
 export function TodayPanel({ tasks, note, timer: controlledTimer, onAddTask, onToggleTask, onNoteChange, onTimerChange }: TodayPanelProps) {
   const [title, setTitle] = useState("");
   const [localTimer, setLocalTimer] = useState(createTimerState);
-  const activeTasks = tasks.filter(isActiveTask).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
+  const activeTasks = tasksForView(tasks.filter(isTaskEntity), "today").slice(0, 3);
   const timer = controlledTimer ?? localTimer;
   const setTimer = onTimerChange ?? setLocalTimer;
   const submit = (event: FormEvent) => {

@@ -19,6 +19,7 @@ import { InboxList } from "../features/inbox/InboxList";
 import { QuickCapture } from "../features/inbox/QuickCapture";
 import { archiveInboxItem, isInboxItem, type InboxItemEntity } from "../features/inbox/inbox-model";
 import { fetchLinkPreview } from "../features/inbox/preview-api";
+import { createTask } from "../features/planner/task-model";
 
 export default function CollectPage() {
   const { entities, loading, commit, remove, showToast } = useWorkspace();
@@ -61,17 +62,11 @@ export default function CollectPage() {
       return;
     }
     if (item.data.kind === "task") {
-      const task: SyncEntity = {
-        id: crypto.randomUUID(),
-        type: "task",
-        updatedAt: Date.now(),
-        data: {
-          title: item.data.title ?? item.data.raw,
-          completed: false,
-          order: entities.filter((entity) => entity.type === "task").length,
-          scheduledFor: item.data.scheduledFor
-        }
-      };
+      const task = createTask({
+        title: item.data.title ?? item.data.raw,
+        order: entities.filter((entity) => entity.type === "task").length,
+        scheduledFor: item.data.scheduledFor
+      });
       await commit([task, archived]);
       showToast("已加入今日计划");
       return;
