@@ -3,6 +3,7 @@ import { authRoutes } from "./auth";
 import { allowedOrigins, type WorkerEnv } from "./env";
 import { isAllowedOrigin } from "./security";
 import { syncRoutes } from "./sync";
+import { previewRoutes } from "./preview";
 
 const app = new Hono<{ Bindings: WorkerEnv }>();
 
@@ -25,5 +26,6 @@ app.use("/v1/*", async (context, next) => {
 app.get("/health", (context) => context.json({ ok: true, service: "xiaohe-workbench-api" }));
 app.route("/v1/auth", authRoutes);
 app.route("/v1/sync", syncRoutes);
+app.route("/v1/preview", previewRoutes);
 
 export default app;
