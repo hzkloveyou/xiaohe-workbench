@@ -23,7 +23,14 @@ app.use("/v1/*", async (context, next) => {
   await next();
 });
 
-app.get("/health", (context) => context.json({ ok: true, service: "xiaohe-workbench-api" }));
+app.get("/health", (context) => {
+  const origin = context.req.header("Origin") ?? null;
+  if (isAllowedOrigin(origin, allowedOrigins(context.env))) {
+    context.header("Access-Control-Allow-Origin", origin!);
+    context.header("Vary", "Origin");
+  }
+  return context.json({ ok: true, service: "xiaohe-workbench-api" });
+});
 app.route("/v1/auth", authRoutes);
 app.route("/v1/sync", syncRoutes);
 app.route("/v1/preview", previewRoutes);
