@@ -1,8 +1,8 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import OverviewPage from "../../pages/OverviewPage";
 import { AppShell } from "./AppShell";
 
-const OverviewPage = lazy(() => import("../../pages/OverviewPage"));
 const CollectPage = lazy(() => import("../../pages/CollectPage"));
 const TodayPage = lazy(() => import("../../pages/TodayPage"));
 const ConnectPage = lazy(() => import("../../pages/ConnectPage"));
