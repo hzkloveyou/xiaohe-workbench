@@ -3,6 +3,7 @@ import { THEME_IDS, type WorkspaceSnapshot } from "./entities";
 
 const idSchema = z.string().trim().min(1).max(128);
 const timestampSchema = z.number().int().nonnegative();
+const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const baseEntitySchema = z.object({
   id: idSchema,
@@ -18,7 +19,11 @@ export const syncEntitySchema = z.discriminatedUnion("type", [
       url: z.url().max(2048),
       groupId: idSchema,
       order: z.number().finite(),
-      icon: z.string().max(16).optional()
+      icon: z.string().max(16).optional(),
+      tags: z.array(z.string().trim().min(1).max(24)).max(20).optional(),
+      favorite: z.boolean().optional(),
+      visitCount: z.number().int().nonnegative().optional(),
+      lastVisitedAt: timestampSchema.optional()
     })
   }),
   baseEntitySchema.extend({
@@ -34,7 +39,14 @@ export const syncEntitySchema = z.discriminatedUnion("type", [
       z.object({
         title: z.string().trim().min(1).max(300),
         completed: z.boolean(),
-        order: z.number().finite()
+        order: z.number().finite(),
+        scheduledFor: dateSchema.optional(),
+        dueAt: dateSchema.optional(),
+        priority: z.enum(["low", "medium", "high"]).optional(),
+        note: z.string().max(2_000).optional(),
+        recurrence: z.enum(["daily", "weekly", "monthly"]).optional(),
+        seriesId: idSchema.optional(),
+        completedAt: timestampSchema.optional()
       }),
       z.object({
         text: z.string().trim().min(1).max(300),
@@ -68,6 +80,29 @@ export const syncEntitySchema = z.discriminatedUnion("type", [
         runningSince: timestampSchema.nullable()
       })
     ])
+  }),
+  baseEntitySchema.extend({
+    type: z.literal("inboxItem"),
+    data: z.object({
+      kind: z.enum(["link", "note", "task"]),
+      raw: z.string().trim().min(1).max(20_000),
+      status: z.enum(["pending", "archived"]),
+      createdAt: timestampSchema,
+      title: z.string().trim().min(1).max(300).optional(),
+      url: z.url().max(2048).optional(),
+      scheduledFor: dateSchema.optional()
+    })
+  }),
+  baseEntitySchema.extend({
+    type: z.literal("focusSession"),
+    data: z.object({
+      plannedMs: z.number().int().positive().max(24 * 60 * 60 * 1000),
+      actualMs: z.number().int().nonnegative().max(24 * 60 * 60 * 1000),
+      startedAt: timestampSchema,
+      endedAt: timestampSchema,
+      completed: z.boolean(),
+      taskId: idSchema.optional()
+    })
   }),
   baseEntitySchema.extend({
     type: z.literal("preference"),
