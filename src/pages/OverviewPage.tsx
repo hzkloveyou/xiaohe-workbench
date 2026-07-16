@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import type { SyncEntity } from "../../shared/entities";
+import type { FocusSessionData, SyncEntity } from "../../shared/entities";
 import { useWorkspace } from "../app/workspace/workspace-context";
 import { BookmarkDialog } from "../features/bookmarks/BookmarkDialog";
 import { BookmarkGrid } from "../features/bookmarks/BookmarkGrid";
@@ -98,6 +98,12 @@ export default function OverviewPage() {
     updatedAt: Date.now(),
     data: value
   }]);
+  const saveFocusSession = async (session: FocusSessionData) => commit([{
+    id: `focus-${session.startedAt}`,
+    type: "focusSession",
+    updatedAt: session.endedAt,
+    data: session
+  }]);
 
   const reveal = {
     initial: reduceMotion ? false : { opacity: 0, y: 18 },
@@ -146,6 +152,7 @@ export default function OverviewPage() {
                 onToggleTask={(task) => void toggleTask(task)}
                 onNoteChange={(value) => void saveNote(value)}
                 onTimerChange={(value) => void saveTimer(value)}
+                onSessionComplete={(session) => void saveFocusSession(session)}
               />
             </motion.div>
           ) : null}

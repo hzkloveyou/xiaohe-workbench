@@ -3,6 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { useWorkspace } from "../app/workspace/workspace-context";
 import { Button } from "../components/Button";
 import { GlassCard } from "../components/GlassCard";
+import { FocusTimer } from "../features/focus/FocusTimer";
+import { createTimerState, type TimerState } from "../features/focus/timer";
+import { FocusInsights } from "../features/insights/FocusInsights";
+import { buildFocusStats, isFocusSessionEntity } from "../features/insights/focus-stats";
 import { PlannerTabs } from "../features/planner/PlannerTabs";
 import { TaskDialog } from "../features/planner/TaskDialog";
 import { TaskList } from "../features/planner/TaskList";
@@ -27,6 +31,9 @@ export default function TodayPage() {
   const [editingTask, setEditingTask] = useState<TaskEntity>();
   const today = localDate();
   const tasks = entities.filter(isTaskEntity);
+  const timerEntity = entities.find((entity) => entity.type === "timer" && !entity.deletedAt);
+  const timer = (timerEntity?.data as TimerState | undefined) ?? createTimerState();
+  const stats = buildFocusStats(entities.filter(isFocusSessionEntity), tasks);
   const buckets = useMemo(() => ({
     today: tasksForView(tasks, "today", today),
     tomorrow: tasksForView(tasks, "tomorrow", today),
@@ -57,10 +64,17 @@ export default function TodayPage() {
     await commit([restoreTask(task)]);
     showToast("任务已恢复");
   };
+  const saveTimer = async (value: TimerState) => commit([{
+    id: timerEntity?.id ?? "focus-timer",
+    type: "timer",
+    updatedAt: Date.now(),
+    data: value
+  }]);
 
   return (
     <main className="app-shell route-page today-page">
       <section className="hero route-page__hero"><p className="eyebrow">TODAY</p><h1>今日计划</h1><p>把重要的事排好，也为专注留下空间。</p></section>
+      <div className="today-dashboard">
       <GlassCard className="planner-panel" aria-labelledby="planner-heading">
         <header className="panel-header"><div><p className="eyebrow">PLANNER</p><h2 id="planner-heading">任务安排</h2></div><Button variant="primary" onClick={() => { setEditingTask(undefined); setDialogOpen(true); }}>＋ 添加任务</Button></header>
         <PlannerTabs value={view} counts={counts} onChange={setView} />
@@ -73,6 +87,11 @@ export default function TodayPage() {
           onDelete={(task) => { if (window.confirm(`删除“${task.data.title}”？`)) void remove(task); }}
         />
       </GlassCard>
+      <div className="today-dashboard__focus">
+        <GlassCard className="focus-session-panel" aria-labelledby="focus-session-heading"><header className="panel-header"><div><p className="eyebrow">FOCUS</p><h2 id="focus-session-heading">专注计时</h2></div></header><FocusTimer state={timer} tasks={buckets.today} onChange={(value) => void saveTimer(value)} onSessionComplete={(session) => void commit([{ id: `focus-${session.startedAt}`, type: "focusSession", updatedAt: session.endedAt, data: session }])} /></GlassCard>
+        <FocusInsights stats={stats} />
+      </div>
+      </div>
       <TaskDialog open={dialogOpen} task={editingTask} defaultDate={view === "tomorrow" ? buckets.tomorrow[0]?.data.scheduledFor : today} onClose={closeDialog} onSave={(input) => void saveTask(input)} />
     </main>
   );

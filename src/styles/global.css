@@ -105,6 +105,22 @@ a { color: inherit; }
 .planner-empty h3 { margin: 0 0 5px; color: var(--text); }
 .planner-empty p { margin: 0; }
 .form-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; }
+.today-dashboard { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .75fr); gap: 18px; align-items: start; }
+.today-dashboard__focus { display: grid; gap: 18px; }
+.focus-timer__setup { display: grid; gap: 10px; width: 100%; margin-bottom: 12px; }
+.duration-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.duration-choices button { padding: 7px 5px; border: 1px solid var(--line); border-radius: 10px; color: var(--text-soft); background: var(--surface-soft); cursor: pointer; }
+.duration-choices button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.focus-task-select { display: grid; gap: 5px; color: var(--text-soft); font-size: .8rem; }
+.focus-task-select select { min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; color: var(--text); background: var(--surface-soft); }
+.streak-pill { padding: 5px 9px; border-radius: 999px; color: var(--accent); font-size: .78rem; background: var(--accent-soft); }
+.insight-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+.insight-metrics div { display: grid; gap: 3px; min-width: 0; padding: 10px; border-radius: 12px; background: var(--surface-soft); }
+.insight-metrics strong { font-size: .92rem; overflow-wrap: anywhere; }
+.insight-metrics span { color: var(--text-soft); font-size: .72rem; }
+.focus-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; height: 120px; align-items: end; }
+.focus-bar { display: grid; grid-template-rows: 88px auto; align-items: end; gap: 6px; text-align: center; color: var(--text-soft); font-size: .72rem; }
+.focus-bar [role="meter"] { height: var(--bar-height); min-height: 2px; border-radius: 6px 6px 3px 3px; background: linear-gradient(180deg, var(--accent), #83bca6); }
 .bookmark-card:hover .bookmark-card__actions, .bookmark-card:focus-within .bookmark-card__actions { opacity: 1; }
 .empty-state { min-height: 250px; display: grid; place-items: center; align-content: center; text-align: center; }
 .empty-state > span { font-size: 2.6rem; color: var(--primary); }

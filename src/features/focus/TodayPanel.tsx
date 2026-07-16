@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import type { SyncEntity } from "../../../shared/entities";
+import type { FocusSessionData, SyncEntity } from "../../../shared/entities";
 import { Button } from "../../components/Button";
 import { GlassCard } from "../../components/GlassCard";
 import { FocusTimer } from "./FocusTimer";
@@ -15,9 +15,10 @@ interface TodayPanelProps {
   onToggleTask?: (task: TaskEntity) => void;
   onNoteChange?: (value: string) => void;
   onTimerChange?: (timer: TimerState) => void;
+  onSessionComplete?: (session: FocusSessionData) => void;
 }
 
-export function TodayPanel({ tasks, note, timer: controlledTimer, onAddTask, onToggleTask, onNoteChange, onTimerChange }: TodayPanelProps) {
+export function TodayPanel({ tasks, note, timer: controlledTimer, onAddTask, onToggleTask, onNoteChange, onTimerChange, onSessionComplete }: TodayPanelProps) {
   const [title, setTitle] = useState("");
   const [localTimer, setLocalTimer] = useState(createTimerState);
   const activeTasks = tasksForView(tasks.filter(isTaskEntity), "today").slice(0, 3);
@@ -43,7 +44,7 @@ export function TodayPanel({ tasks, note, timer: controlledTimer, onAddTask, onT
           </form>
           <QuickNote value={note} onChange={onNoteChange} />
         </div>
-        <FocusTimer state={timer} onChange={setTimer} />
+        <FocusTimer state={timer} onChange={setTimer} tasks={activeTasks} onSessionComplete={onSessionComplete} />
       </div>
     </GlassCard>
   );
