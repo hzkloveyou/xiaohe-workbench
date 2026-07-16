@@ -18,7 +18,7 @@ export function getWorkspacePreferences(entities: SyncEntity[]): WorkspacePrefer
   const data = (entity?.data ?? {}) as PreferenceData;
   return {
     searchEngine: data.searchEngine ?? DEFAULT_PREFERENCES.searchEngine,
-    githubUsername: typeof data.githubUsername === "string" && data.githubUsername.trim() ? data.githubUsername.trim() : DEFAULT_PREFERENCES.githubUsername,
+    githubUsername: typeof data.githubUsername === "string" ? data.githubUsername.trim() : DEFAULT_PREFERENCES.githubUsername,
     panels: { ...DEFAULT_PREFERENCES.panels, ...(data.panels ?? {}) }
   };
 }

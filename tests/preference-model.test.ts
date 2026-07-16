@@ -13,4 +13,9 @@ describe("workspace preferences", () => {
     expect(second).toHaveLength(1);
     expect(second[0]?.updatedAt).toBe(20);
   });
+
+  it("keeps an explicit empty GitHub draft editable", () => {
+    const entities = upsertWorkspacePreferences([], { githubUsername: "" }, 10);
+    expect(getWorkspacePreferences(entities).githubUsername).toBe("");
+  });
 });
