@@ -1,13 +1,11 @@
 import { useState, type FormEvent } from "react";
-import type { SyncEntity } from "../../../shared/entities";
+import type { FocusSessionData, SyncEntity } from "../../../shared/entities";
 import { Button } from "../../components/Button";
 import { GlassCard } from "../../components/GlassCard";
 import { FocusTimer } from "./FocusTimer";
 import { QuickNote } from "./QuickNote";
 import { createTimerState, type TimerState } from "./timer";
-
-interface TaskData { title: string; order: number; completed: boolean }
-type TaskEntity = SyncEntity<TaskData> & { type: "task" };
+import { isTaskEntity, tasksForView, type TaskEntity } from "../planner/task-model";
 
 interface TodayPanelProps {
   tasks: SyncEntity[];
@@ -17,16 +15,13 @@ interface TodayPanelProps {
   onToggleTask?: (task: TaskEntity) => void;
   onNoteChange?: (value: string) => void;
   onTimerChange?: (timer: TimerState) => void;
+  onSessionComplete?: (session: FocusSessionData) => void;
 }
 
-function isActiveTask(entity: SyncEntity): entity is TaskEntity {
-  return entity.type === "task" && !entity.deletedAt && !(entity.data as TaskData).completed;
-}
-
-export function TodayPanel({ tasks, note, timer: controlledTimer, onAddTask, onToggleTask, onNoteChange, onTimerChange }: TodayPanelProps) {
+export function TodayPanel({ tasks, note, timer: controlledTimer, onAddTask, onToggleTask, onNoteChange, onTimerChange, onSessionComplete }: TodayPanelProps) {
   const [title, setTitle] = useState("");
   const [localTimer, setLocalTimer] = useState(createTimerState);
-  const activeTasks = tasks.filter(isActiveTask).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
+  const activeTasks = tasksForView(tasks.filter(isTaskEntity), "today").slice(0, 3);
   const timer = controlledTimer ?? localTimer;
   const setTimer = onTimerChange ?? setLocalTimer;
   const submit = (event: FormEvent) => {
@@ -49,7 +44,7 @@ export function TodayPanel({ tasks, note, timer: controlledTimer, onAddTask, onT
           </form>
           <QuickNote value={note} onChange={onNoteChange} />
         </div>
-        <FocusTimer state={timer} onChange={setTimer} />
+        <FocusTimer state={timer} onChange={setTimer} tasks={activeTasks} onSessionComplete={onSessionComplete} />
       </div>
     </GlassCard>
   );

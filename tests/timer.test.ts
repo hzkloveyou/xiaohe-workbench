@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pauseTimer, resetTimer, restoreTimer, startTimer, type TimerState } from "../src/features/focus/timer";
+import { configureTimer, finishTimerSession, pauseTimer, resetTimer, restoreTimer, startTimer, type TimerState } from "../src/features/focus/timer";
 
 const timer: TimerState = {
   durationMs: 25 * 60_000,
@@ -39,5 +39,26 @@ describe("focus timer", () => {
       running: false,
       updatedAt: 5
     });
+  });
+
+  it("changes duration and associates a task while stopped", () => {
+    expect(configureTimer(timer, 45 * 60_000, "task-one")).toMatchObject({
+      durationMs: 45 * 60_000,
+      remainingMs: 45 * 60_000,
+      taskId: "task-one"
+    });
+  });
+
+  it("creates one completed focus session payload", () => {
+    const running = startTimer({ durationMs: 1_000, remainingMs: 1_000, running: false, taskId: "task-one" }, 100);
+    expect(finishTimerSession(running, 1_100)).toEqual({
+      plannedMs: 1_000,
+      actualMs: 1_000,
+      startedAt: 100,
+      endedAt: 1_100,
+      completed: true,
+      taskId: "task-one"
+    });
+    expect(finishTimerSession(timer, 1_100)).toBeNull();
   });
 });

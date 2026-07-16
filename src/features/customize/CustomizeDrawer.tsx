@@ -4,17 +4,20 @@ import { Button } from "../../components/Button";
 import { Dialog } from "../../components/Dialog";
 import { exportBackup, parseBackup } from "./backup";
 import { ThemePicker } from "./ThemePicker";
+import type { PanelVisibility, WorkspacePreferences } from "./preference-model";
 
-export interface PanelVisibility { search: boolean; bookmarks: boolean; focus: boolean }
+export type { PanelVisibility } from "./preference-model";
 
 interface CustomizeDrawerProps {
   open: boolean;
   theme: ThemeId;
   visibility: PanelVisibility;
+  preferences: WorkspacePreferences;
   snapshot: WorkspaceSnapshot;
   onClose: () => void;
   onThemeChange: (theme: ThemeId) => void;
   onVisibilityChange: (value: PanelVisibility) => void;
+  onPreferencesChange: (value: Partial<WorkspacePreferences>) => void;
   onImport: (snapshot: WorkspaceSnapshot) => void;
   onError: (message: string) => void;
 }
@@ -42,6 +45,7 @@ export function CustomizeDrawer(props: CustomizeDrawerProps) {
     <Dialog open title="个性化工作台" onClose={props.onClose}>
       <div className="customize-content">
         <ThemePicker value={props.theme} onChange={props.onThemeChange} />
+        <fieldset className="integration-preferences"><legend>搜索与连接</legend><label>默认搜索引擎<select value={props.preferences.searchEngine} onChange={(event) => props.onPreferencesChange({ searchEngine: event.target.value as WorkspacePreferences["searchEngine"] })}><option value="bing">Bing</option><option value="baidu">百度</option><option value="google">Google</option></select></label><label>GitHub 用户名<input defaultValue={props.preferences.githubUsername} onBlur={(event) => props.onPreferencesChange({ githubUsername: event.target.value })} maxLength={39} placeholder="例如 hzkloveyou" /></label></fieldset>
         <fieldset className="visibility-picker"><legend>显示模块</legend>{(["search", "bookmarks", "focus"] as const).map((key) => <label key={key}><input type="checkbox" checked={props.visibility[key]} onChange={(event) => props.onVisibilityChange({ ...props.visibility, [key]: event.target.checked })} />{key === "search" ? "智能搜索" : key === "bookmarks" ? "快捷书签" : "今日专注"}</label>)}</fieldset>
         <div className="backup-actions"><div><strong>本地备份</strong><p>导出内容不包含密码，可随时恢复。</p></div><Button onClick={download}>导出 JSON</Button><Button onClick={() => fileRef.current?.click()}>导入备份</Button><input ref={fileRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={importFile} /></div>
       </div>

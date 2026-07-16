@@ -51,4 +51,16 @@ describe("workspace repository", () => {
     expect(await repository.getPendingChanges()).toContainEqual(change);
     await repository.close();
   });
+
+  it("persists the remote synchronization cursor", async () => {
+    const name = `workspace-${crypto.randomUUID()}`;
+    databaseNames.push(name);
+    const repository = createWorkspaceRepository(name);
+
+    expect(await repository.getSyncCursor()).toBe(0);
+    await repository.setSyncCursor(42);
+    expect(await repository.getSyncCursor()).toBe(42);
+
+    await repository.close();
+  });
 });

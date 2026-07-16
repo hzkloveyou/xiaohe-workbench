@@ -1,13 +1,18 @@
 {
   "name": "小贺的工作台",
   "short_name": "小贺工作台",
-  "description": "搜索、书签与今日专注，一个清新好用的个人启动台。",
+  "description": "集搜索、收集、书签、计划、专注和状态于一体的本地优先个人工作台。",
   "lang": "zh-CN",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#edf9fb",
   "theme_color": "#2e9c83",
+  "shortcuts": [
+    { "name": "万能收集箱", "short_name": "收集", "url": "/collect?capture=auto" },
+    { "name": "今日计划", "short_name": "今日", "url": "/today" },
+    { "name": "连接与状态", "short_name": "状态", "url": "/connect" }
+  ],
   "icons": [
     { "src": "/icons/workbench.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "/icons/workbench-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }

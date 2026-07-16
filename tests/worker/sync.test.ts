@@ -50,4 +50,13 @@ describe("sync service", () => {
 
     expect((await service.pull("user-a", 0)).changes[0].updatedAt).toBe(20);
   });
+
+  it("returns the greatest entity clock as its pull cursor", async () => {
+    const service = createSyncService(new MemorySyncStore());
+    await service.push("user-a", [note(12), { ...note(20), id: "note-2", deletedAt: 25 }]);
+
+    const result = await service.pull("user-a", 0);
+
+    expect(result.cursor).toBe(25);
+  });
 });

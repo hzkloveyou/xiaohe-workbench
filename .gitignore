@@ -9,6 +9,7 @@ test-results/
 .env.*
 !.env.example
 .superpowers/
+.worktrees/
 work/
 outputs/
 *.log

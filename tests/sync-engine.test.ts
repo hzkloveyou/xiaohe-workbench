@@ -20,6 +20,8 @@ function createRepository() {
     applyRemoteChanges: vi.fn(),
     getPendingChanges: vi.fn(async () => [change]),
     removePendingChanges: vi.fn(),
+    getSyncCursor: vi.fn(async () => 0),
+    setSyncCursor: vi.fn(),
     setTheme: vi.fn(),
     replaceSnapshot: vi.fn(),
     close: vi.fn()
@@ -59,7 +61,7 @@ describe("sync engine", () => {
     const repository = createRepository();
     const api = {
       push: vi.fn(async () => ({ acknowledgedIds: ["note-1"], changes: [] })),
-      pull: vi.fn()
+      pull: vi.fn(async () => ({ changes: [], cursor: 10 }))
     };
     const engine = createSyncEngine({ repository, api, online: () => true });
 
@@ -67,5 +69,53 @@ describe("sync engine", () => {
 
     expect(engine.getState()).toBe("idle");
     expect(repository.removePendingChanges).toHaveBeenCalledWith(["note-1"]);
+    expect(repository.setSyncCursor).toHaveBeenCalledWith(10);
+  });
+
+  it("pulls remote data on a clean new device", async () => {
+    const repository = createRepository();
+    repository.getPendingChanges.mockResolvedValue([]);
+    const remote: SyncEntity = {
+      id: "bookmark-remote",
+      type: "bookmark",
+      updatedAt: 42,
+      data: { title: "远端书签", url: "https://example.com", groupId: "dev", order: 0 }
+    };
+    const api = {
+      push: vi.fn(),
+      pull: vi.fn(async () => ({ changes: [remote], cursor: 42 }))
+    };
+    const engine = createSyncEngine({ repository, api, online: () => true });
+
+    await engine.flush();
+
+    expect(api.push).not.toHaveBeenCalled();
+    expect(api.pull).toHaveBeenCalledWith(0);
+    expect(repository.applyRemoteChanges).toHaveBeenCalledWith(expect.arrayContaining([remote]));
+    expect(repository.setSyncCursor).toHaveBeenCalledWith(42);
+  });
+
+  it("pushes a large queue in bounded batches", async () => {
+    const repository = createRepository();
+    const changes = Array.from({ length: 501 }, (_, index): SyncEntity => ({
+      id: `note-${index}`,
+      type: "note",
+      updatedAt: index + 1,
+      data: { content: `记录 ${index}` }
+    }));
+    repository.getPendingChanges.mockResolvedValue(changes);
+    const api = {
+      push: vi.fn(async (batch: SyncEntity[]) => ({
+        acknowledgedIds: batch.map((entity) => entity.id),
+        changes: []
+      })),
+      pull: vi.fn(async () => ({ changes: [], cursor: 501 }))
+    };
+    const engine = createSyncEngine({ repository, api, online: () => true });
+
+    await engine.flush();
+
+    expect(api.push.mock.calls.map(([batch]) => batch.length)).toEqual([200, 200, 101]);
+    expect(repository.removePendingChanges).toHaveBeenCalledTimes(3);
   });
 });
