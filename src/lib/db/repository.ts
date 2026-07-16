@@ -9,6 +9,8 @@ export interface WorkspaceRepository {
   applyRemoteChanges(changes: SyncEntity[]): Promise<void>;
   getPendingChanges(): Promise<SyncEntity[]>;
   removePendingChanges(ids: string[]): Promise<void>;
+  getSyncCursor(): Promise<number>;
+  setSyncCursor(cursor: number): Promise<void>;
   setTheme(theme: ThemeId): Promise<void>;
   replaceSnapshot(snapshot: WorkspaceSnapshot): Promise<void>;
   close(): Promise<void>;
@@ -54,6 +56,14 @@ export function createWorkspaceRepository(databaseName?: string): WorkspaceRepos
     },
     async removePendingChanges(ids) {
       await database.syncQueue.bulkDelete(ids);
+    },
+    async getSyncCursor() {
+      const record = await database.meta.get("syncCursor");
+      const cursor = Number(record?.value ?? 0);
+      return Number.isFinite(cursor) && cursor >= 0 ? cursor : 0;
+    },
+    async setSyncCursor(cursor) {
+      await database.meta.put({ key: "syncCursor", value: Math.max(0, Math.floor(cursor)) });
     },
     async setTheme(theme) {
       await database.meta.put({ key: "theme", value: theme });
