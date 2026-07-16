@@ -1,12 +1,6 @@
-import type { SyncEntity } from "../../../shared/entities";
+import type { BookmarkData as SharedBookmarkData, SyncEntity } from "../../../shared/entities";
 
-export interface BookmarkData {
-  title: string;
-  url: string;
-  groupId: string;
-  order: number;
-  icon?: string;
-}
+export type BookmarkData = SharedBookmarkData;
 
 export type BookmarkEntity = SyncEntity<BookmarkData> & { type: "bookmark" };
 

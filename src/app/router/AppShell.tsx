@@ -1,13 +1,16 @@
-import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { useCallback, useMemo, useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { AccountMenu } from "../../features/auth/AccountMenu";
 import { AuthDialog } from "../../features/auth/AuthDialog";
 import { CustomizeDrawer } from "../../features/customize/CustomizeDrawer";
+import { CommandPalette } from "../../features/command/CommandPalette";
+import { buildCommands } from "../../features/command/command-model";
+import { useCommandShortcut } from "../../features/command/useCommandShortcut";
 import { Button } from "../../components/Button";
 import { Toast } from "../../components/Toast";
 import { useWorkspace } from "../workspace/workspace-context";
 
-export const APP_ROUTES = [
+const APP_ROUTES = [
   { to: "/", label: "概览", icon: "⌂" },
   { to: "/collect", label: "收集", icon: "＋" },
   { to: "/today", label: "今日", icon: "✓" },
@@ -34,8 +37,18 @@ function PageNavigation({ className = "" }: { className?: string }) {
 
 export function AppShell() {
   const workspace = useWorkspace();
+  const navigate = useNavigate();
   const [authOpen, setAuthOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const openCommand = useCallback(() => setCommandOpen(true), []);
+  useCommandShortcut(openCommand);
+  const commands = useMemo(() => buildCommands({
+    bookmarks: workspace.entities,
+    navigate,
+    openUrl: (url) => window.open(url, "_blank", "noopener,noreferrer"),
+    setTheme: (theme) => void workspace.setTheme(theme)
+  }), [navigate, workspace]);
 
   return (
     <div className="app-canvas routed-workbench">
@@ -47,6 +60,9 @@ export function AppShell() {
         </NavLink>
         <PageNavigation className="route-nav--responsive" />
         <nav className="topbar__actions" aria-label="账户与设置">
+          <Button className="command-button" variant="ghost" aria-label="打开全局指令中心" onClick={openCommand}>
+            <span aria-hidden="true">⌘</span><span>指令</span><kbd>Ctrl K</kbd>
+          </Button>
           <AccountMenu
             user={workspace.user}
             syncState={workspace.syncState}
@@ -63,6 +79,18 @@ export function AppShell() {
         onAuthenticated={(user) => {
           workspace.setAuthenticatedUser(user);
           workspace.showToast("登录成功，正在同步");
+        }}
+      />
+      <CommandPalette
+        open={commandOpen}
+        items={commands}
+        onClose={() => setCommandOpen(false)}
+        onWebSearch={(query) => {
+          window.location.assign(`https://www.bing.com/search?q=${encodeURIComponent(query)}`);
+        }}
+        onQuickCapture={(query) => {
+          setCommandOpen(false);
+          navigate(`/collect?capture=${encodeURIComponent(query)}`);
         }}
       />
       {workspace.snapshot ? (
