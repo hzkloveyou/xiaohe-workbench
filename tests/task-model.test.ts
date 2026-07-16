@@ -48,6 +48,7 @@ describe("task model", () => {
   it("generates the next monthly task and clamps missing dates", () => {
     const task = taskOn("2026-01-31", "monthly");
     expect(nextRecurringTask(task, 20).data.scheduledFor).toBe("2026-02-28");
+    expect(nextRecurringTask(task, 20).id).toBe(nextRecurringTask(task, 30).id);
   });
 
   it("restores a completed task without creating another recurrence", () => {

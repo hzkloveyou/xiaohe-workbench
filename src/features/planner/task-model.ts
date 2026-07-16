@@ -96,7 +96,7 @@ export function nextRecurringTask(task: TaskEntity, now = Date.now()): TaskEntit
       : addMonthClamped(sourceDate);
   const seriesId = task.data.seriesId ?? task.id;
   return {
-    id: crypto.randomUUID(),
+    id: `recurring:${seriesId}:${scheduledFor}`,
     type: "task",
     updatedAt: now,
     data: {
