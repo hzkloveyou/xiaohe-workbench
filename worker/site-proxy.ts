@@ -13,7 +13,14 @@ export function createSiteProxy(fetcher: typeof fetch = fetch) {
       const upstream = new URL(`${PROJECT_PREFIX}${incoming.pathname}`, GITHUB_PAGES_ORIGIN);
       upstream.search = incoming.search;
       const upstreamRequest = new Request(upstream, request);
-      const response = await fetcher(upstreamRequest);
+      let response = await fetcher(upstreamRequest);
+      const acceptsHtml = request.headers.get("Accept")?.includes("text/html") ?? false;
+      const lastSegment = incoming.pathname.split("/").filter(Boolean).at(-1) ?? "";
+      const looksLikeAsset = lastSegment.includes(".");
+      const isHtmlNavigation = request.method === "GET" && !looksLikeAsset && (request.mode === "navigate" || acceptsHtml);
+      if (response.status === 404 && isHtmlNavigation) {
+        response = await fetcher(new Request(new URL(`${PROJECT_PREFIX}/`, GITHUB_PAGES_ORIGIN), request));
+      }
       const headers = new Headers(response.headers);
       headers.set("X-Content-Type-Options", "nosniff");
       headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
