@@ -7,7 +7,9 @@ import { BookmarkGrid } from "../features/bookmarks/BookmarkGrid";
 import {
   createBookmark,
   isBookmarkEntity,
+  recordBookmarkVisit,
   reorderBookmarks,
+  toggleFavorite,
   updateBookmark,
   type BookmarkEntity,
   type BookmarkInput
@@ -65,6 +67,20 @@ export default function OverviewPage() {
     if (changed.length) await commit(changed);
   };
 
+  const commitBookmarkChange = async (next: SyncEntity[], id: string) => {
+    const changed = next.find((entity) => entity.id === id);
+    if (changed) await commit([changed]);
+  };
+
+  const copyBookmark = async (bookmark: BookmarkEntity) => {
+    try {
+      await navigator.clipboard.writeText(bookmark.data.url);
+      showToast("链接已复制");
+    } catch {
+      showToast("复制失败，请手动复制");
+    }
+  };
+
   const addTask = async (title: string) => commit([{
     id: crypto.randomUUID(),
     type: "task",
@@ -120,6 +136,9 @@ export default function OverviewPage() {
                 onEdit={(bookmark) => { setEditingBookmark(bookmark); setBookmarkOpen(true); }}
                 onDelete={(bookmark) => void deleteBookmark(bookmark)}
                 onReorder={(active, over) => void moveBookmark(active, over)}
+                onVisit={(bookmark) => void commitBookmarkChange(recordBookmarkVisit(bookmarks, bookmark.id), bookmark.id)}
+                onToggleFavorite={(bookmark) => void commitBookmarkChange(toggleFavorite(bookmarks, bookmark.id), bookmark.id)}
+                onCopy={(bookmark) => void copyBookmark(bookmark)}
               />
             </motion.div>
           ) : null}

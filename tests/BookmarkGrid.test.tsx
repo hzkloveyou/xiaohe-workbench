@@ -72,4 +72,43 @@ describe("BookmarkGrid", () => {
     expect(screen.getByRole("link", { name: /MDN/ })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /GitHub/ })).not.toBeInTheDocument();
   });
+
+  it("searches, filters favorites and reports bookmark actions", () => {
+    const onVisit = vi.fn();
+    const onToggleFavorite = vi.fn();
+    const enhanced: SyncEntity[] = [
+      {
+        ...bookmarks[0]!,
+        data: { ...(bookmarks[0]!.data as object), favorite: true, tags: ["代码"] }
+      },
+      {
+        id: "mdn",
+        type: "bookmark",
+        updatedAt: 2,
+        data: { title: "MDN", url: "https://developer.mozilla.org/", groupId: "all", order: 1, tags: ["文档"] }
+      }
+    ];
+    render(
+      <BookmarkGrid
+        bookmarks={enhanced}
+        groups={groups}
+        onAdd={() => undefined}
+        onVisit={onVisit}
+        onToggleFavorite={onToggleFavorite}
+      />
+    );
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "搜索书签" }), { target: { value: "代码" } });
+    expect(screen.getByRole("link", { name: /GitHub/ })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /MDN/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "取消收藏 GitHub" }));
+    fireEvent.click(screen.getByRole("link", { name: /GitHub/ }));
+    expect(onToggleFavorite).toHaveBeenCalledWith(expect.objectContaining({ id: "github" }));
+    expect(onVisit).toHaveBeenCalledWith(expect.objectContaining({ id: "github" }));
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "搜索书签" }), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "只看收藏" }));
+    expect(screen.getByRole("link", { name: /GitHub/ })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /MDN/ })).not.toBeInTheDocument();
+  });
 });

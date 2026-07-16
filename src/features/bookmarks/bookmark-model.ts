@@ -10,6 +10,29 @@ export interface BookmarkInput {
   groupId: string;
   order?: number;
   icon?: string;
+  tags?: string[];
+  favorite?: boolean;
+}
+
+export type BookmarkSort = "order" | "recent" | "popular" | "title";
+
+export interface BookmarkFilterOptions {
+  query?: string;
+  groupId?: string;
+  favoritesOnly?: boolean;
+  sort?: BookmarkSort;
+}
+
+export function normalizeTags(tags: string[] = []): string[] {
+  const seen = new Set<string>();
+  return tags.reduce<string[]>((result, value) => {
+    const tag = value.trim();
+    const key = tag.toLocaleLowerCase();
+    if (!tag || seen.has(key)) return result;
+    seen.add(key);
+    result.push(tag);
+    return result;
+  }, []);
 }
 
 export function normalizeBookmarkUrl(value: string): string {
@@ -36,17 +59,20 @@ export function createBookmark(
   if (!title) throw new Error("请输入书签名称");
   const url = normalizeBookmarkUrl(input.url);
   const icon = input.icon?.trim() || Array.from(title)[0]?.toUpperCase() || "↗";
+  const data: BookmarkData = {
+    title,
+    url,
+    groupId: input.groupId,
+    order: input.order ?? 0,
+    icon
+  };
+  if (input.tags !== undefined) data.tags = normalizeTags(input.tags);
+  if (input.favorite !== undefined) data.favorite = input.favorite;
   return {
     id: options.id ?? crypto.randomUUID(),
     type: "bookmark",
     updatedAt: options.now ?? Date.now(),
-    data: {
-      title,
-      url,
-      groupId: input.groupId,
-      order: input.order ?? 0,
-      icon
-    }
+    data
   };
 }
 
@@ -76,9 +102,64 @@ export function updateBookmark(
       ...entity.data,
       ...patch,
       title: patch.title === undefined ? entity.data.title : patch.title.trim(),
-      url: patch.url === undefined ? entity.data.url : normalizeBookmarkUrl(patch.url)
+      url: patch.url === undefined ? entity.data.url : normalizeBookmarkUrl(patch.url),
+      tags: patch.tags === undefined ? entity.data.tags : normalizeTags(patch.tags)
     };
     return { ...entity, updatedAt: now, data };
+  });
+}
+
+export function toggleFavorite(entities: SyncEntity[], id: string, now = Date.now()): SyncEntity[] {
+  return entities.map((entity) =>
+    isBookmarkEntity(entity) && entity.id === id
+      ? { ...entity, updatedAt: now, data: { ...entity.data, favorite: !entity.data.favorite } }
+      : entity
+  );
+}
+
+export function recordBookmarkVisit(entities: SyncEntity[], id: string, now = Date.now()): SyncEntity[] {
+  return entities.map((entity) =>
+    isBookmarkEntity(entity) && entity.id === id
+      ? {
+          ...entity,
+          updatedAt: now,
+          data: {
+            ...entity.data,
+            visitCount: (entity.data.visitCount ?? 0) + 1,
+            lastVisitedAt: now
+          }
+        }
+      : entity
+  );
+}
+
+export function filterBookmarks(
+  entities: SyncEntity[],
+  options: BookmarkFilterOptions = {}
+): BookmarkEntity[] {
+  const query = options.query?.trim().toLocaleLowerCase() ?? "";
+  const result = entities.filter(isBookmarkEntity).filter((bookmark) => {
+    if (options.groupId && options.groupId !== "all" && bookmark.data.groupId !== options.groupId) return false;
+    if (options.favoritesOnly && !bookmark.data.favorite) return false;
+    if (!query) return true;
+    const domain = new URL(bookmark.data.url).hostname.replace(/^www\./, "");
+    return [bookmark.data.title, bookmark.data.url, domain, ...(bookmark.data.tags ?? [])]
+      .join(" ")
+      .toLocaleLowerCase()
+      .includes(query);
+  });
+
+  return [...result].sort((left, right) => {
+    switch (options.sort ?? "order") {
+      case "recent":
+        return (right.data.lastVisitedAt ?? 0) - (left.data.lastVisitedAt ?? 0) || left.data.order - right.data.order;
+      case "popular":
+        return (right.data.visitCount ?? 0) - (left.data.visitCount ?? 0) || left.data.order - right.data.order;
+      case "title":
+        return left.data.title.localeCompare(right.data.title, "zh-CN");
+      default:
+        return left.data.order - right.data.order;
+    }
   });
 }
 

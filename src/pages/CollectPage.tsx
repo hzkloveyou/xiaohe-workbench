@@ -8,7 +8,9 @@ import { BookmarkGrid } from "../features/bookmarks/BookmarkGrid";
 import {
   createBookmark,
   isBookmarkEntity,
+  recordBookmarkVisit,
   reorderBookmarks,
+  toggleFavorite,
   updateBookmark,
   type BookmarkEntity,
   type BookmarkInput
@@ -99,6 +101,20 @@ export default function CollectPage() {
     if (changed.length) await commit(changed);
   };
 
+  const commitBookmarkChange = async (next: SyncEntity[], id: string) => {
+    const changed = next.find((entity) => entity.id === id);
+    if (changed) await commit([changed]);
+  };
+
+  const copyBookmark = async (bookmark: BookmarkEntity) => {
+    try {
+      await navigator.clipboard.writeText(bookmark.data.url);
+      showToast("链接已复制");
+    } catch {
+      showToast("复制失败，请手动复制");
+    }
+  };
+
   return (
     <main className="app-shell route-page collect-page">
       <section className="hero route-page__hero"><p className="eyebrow">COLLECT</p><h1>收集与书签</h1><p>把链接、任务和灵感先放进来，再从容整理。</p></section>
@@ -122,6 +138,9 @@ export default function CollectPage() {
           onEdit={(bookmark) => { setEditingBookmark(bookmark); setBookmarkOpen(true); }}
           onDelete={(bookmark) => { if (window.confirm(`删除“${bookmark.data.title}”？`)) void remove(bookmark); }}
           onReorder={(active, over) => void moveBookmark(active, over)}
+          onVisit={(bookmark) => void commitBookmarkChange(recordBookmarkVisit(bookmarks, bookmark.id), bookmark.id)}
+          onToggleFavorite={(bookmark) => void commitBookmarkChange(toggleFavorite(bookmarks, bookmark.id), bookmark.id)}
+          onCopy={(bookmark) => void copyBookmark(bookmark)}
         />
       </div>
       <BookmarkDialog
