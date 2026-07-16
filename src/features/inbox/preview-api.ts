@@ -9,7 +9,7 @@ export async function fetchLinkPreview(
   fetcher: typeof fetch = fetch,
   baseUrl = import.meta.env.VITE_API_URL ?? "https://api.080492.xyz"
 ): Promise<LinkPreview> {
-  const response = await fetcher(`${baseUrl}/v1/preview/`, {
+  const response = await fetcher(`${baseUrl}/v1/preview`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
