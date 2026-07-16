@@ -37,7 +37,7 @@ function formatUtcDate(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
 
-function addDays(value: string, count: number): string {
+export function dateAfter(value: string, count: number): string {
   const date = parseDate(value);
   date.setUTCDate(date.getUTCDate() + count);
   return formatUtcDate(date);
@@ -90,9 +90,9 @@ export function nextRecurringTask(task: TaskEntity, now = Date.now()): TaskEntit
   if (!recurrence) throw new Error("这不是重复任务");
   const sourceDate = task.data.scheduledFor ?? localDate(new Date(now));
   const scheduledFor = recurrence === "daily"
-    ? addDays(sourceDate, 1)
+    ? dateAfter(sourceDate, 1)
     : recurrence === "weekly"
-      ? addDays(sourceDate, 7)
+      ? dateAfter(sourceDate, 7)
       : addMonthClamped(sourceDate);
   const seriesId = task.data.seriesId ?? task.id;
   return {
@@ -123,7 +123,7 @@ export function restoreTask(task: TaskEntity, now = Date.now()): TaskEntity {
 }
 
 export function tasksForView(tasks: TaskEntity[], view: TaskView, today = localDate()): TaskEntity[] {
-  const tomorrow = addDays(today, 1);
+  const tomorrow = dateAfter(today, 1);
   return tasks.filter((task) => {
     if (view === "completed") return task.data.completed;
     if (task.data.completed) return false;

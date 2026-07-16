@@ -13,6 +13,7 @@ import { TaskList } from "../features/planner/TaskList";
 import {
   completeTask,
   createTask,
+  dateAfter,
   isTaskEntity,
   localDate,
   restoreTask,
@@ -92,7 +93,7 @@ export default function TodayPage() {
         <FocusInsights stats={stats} />
       </div>
       </div>
-      <TaskDialog open={dialogOpen} task={editingTask} defaultDate={view === "tomorrow" ? buckets.tomorrow[0]?.data.scheduledFor : today} onClose={closeDialog} onSave={(input) => void saveTask(input)} />
+      <TaskDialog open={dialogOpen} task={editingTask} defaultDate={view === "tomorrow" ? dateAfter(today, 1) : view === "later" ? dateAfter(today, 2) : today} onClose={closeDialog} onSave={(input) => void saveTask(input)} />
     </main>
   );
 }

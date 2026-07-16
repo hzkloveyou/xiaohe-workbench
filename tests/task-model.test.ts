@@ -3,6 +3,7 @@ import type { TaskEntity } from "../src/features/planner/task-model";
 import {
   completeTask,
   createTask,
+  dateAfter,
   nextRecurringTask,
   restoreTask,
   tasksForView
@@ -53,5 +54,9 @@ describe("task model", () => {
     const [completed] = completeTask(taskOn("2026-07-16", "daily"), 20);
     expect(restoreTask(completed, 30).data).toMatchObject({ completed: false });
     expect(restoreTask(completed, 30).data.completedAt).toBeUndefined();
+  });
+
+  it("calculates planner default dates across month boundaries", () => {
+    expect(dateAfter("2026-07-31", 1)).toBe("2026-08-01");
   });
 });
