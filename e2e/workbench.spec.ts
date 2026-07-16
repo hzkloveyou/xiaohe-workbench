@@ -55,4 +55,6 @@ test("keeps the workbench shell available offline", async ({ page }, testInfo) =
   expect(failedAssets).toEqual([]);
   expect(await page.content()).toContain('id="root"');
   await expect(page.getByRole("heading", { level: 1, name: "小贺的工作台" })).toBeVisible();
+  await page.getByRole("link", { name: "今日" }).click();
+  await expect(page.getByRole("heading", { name: "今日计划" })).toBeVisible();
 });

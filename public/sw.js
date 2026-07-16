@@ -20,7 +20,12 @@ async function cacheBuiltAssetGraph(cache, html) {
     await cache.put(path, response.clone());
     if (path.endsWith(".js")) {
       const source = await response.text();
-      for (const match of source.matchAll(/["'](\/assets\/[^"']+\.(?:js|css))["']/g)) queue.push(match[1]);
+      for (const match of source.matchAll(/["'](\/?assets\/[^"']+\.(?:js|css))["']/g)) {
+        queue.push(match[1].startsWith("/") ? match[1] : `/${match[1]}`);
+      }
+      for (const match of source.matchAll(/["'](\.\/[^"']+\.(?:js|css))["']/g)) {
+        queue.push(new URL(match[1], new URL(path, self.location.origin)).pathname);
+      }
     }
   }
 }
